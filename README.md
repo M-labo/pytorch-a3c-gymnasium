@@ -11,6 +11,7 @@ pip install gymnasium
 pip install numpy
 pip install torch
 pip install opencv-python
+```
 
 ## Usage
 ```bash
