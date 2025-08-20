@@ -40,6 +40,12 @@ parser.add_argument('--env-name', default='ALE/Pong-v5',
                     help='environment to train on (default: ALE/Pong-v5)')
 parser.add_argument('--no-shared', default=False,
                     help='use an optimizer without shared momentum.')
+parser.add_argument('--rec-video', default=True,
+                    help='record video during evaluation (default: without record)')
+parser.add_argument('--video-every', type=int, default=5,
+                    help='record every Nth episode in evaluation (default: 5)')
+parser.add_argument('--video-dir', default='./videos',
+                    help='directory to save videos (default: ./videos)')
 
 
 if __name__ == '__main__':
