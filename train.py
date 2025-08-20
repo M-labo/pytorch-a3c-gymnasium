@@ -18,7 +18,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None):
     torch.manual_seed(args.seed + rank)
 
     env = create_atari_env(args.env_name)
-    env.seed(args.seed + rank)
+    # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
@@ -27,7 +27,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None):
 
     model.train()
 
-    state = env.reset()
+    state, info = env.reset(seed=args.seed + rank)
     state = torch.from_numpy(state)
     done = True
 
@@ -59,8 +59,8 @@ def train(rank, args, shared_model, counter, lock, optimizer=None):
             action = prob.multinomial(num_samples=1).detach()
             log_prob = log_prob.gather(1, action)
 
-            state, reward, done, _ = env.step(action.numpy())
-            done = done or episode_length >= args.max_episode_length
+            state, reward, terminated, truncated, _ = env.step(action.numpy().item())
+            done = terminated or truncated or episode_length >= args.max_episode_length
             reward = max(min(reward, 1), -1)
 
             with lock:
@@ -68,7 +68,7 @@ def train(rank, args, shared_model, counter, lock, optimizer=None):
 
             if done:
                 episode_length = 0
-                state = env.reset()
+                state, info = env.reset(seed=args.seed + rank)
 
             state = torch.from_numpy(state)
             values.append(value)

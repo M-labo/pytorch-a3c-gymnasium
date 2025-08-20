@@ -1,12 +1,14 @@
 import cv2
-import gym
+import gymnasium as gym
+import ale_py
 import numpy as np
-from gym.spaces.box import Box
+from gymnasium.spaces.box import Box
 
 
 # Taken from https://github.com/openai/universe-starter-agent
 def create_atari_env(env_id):
-    env = gym.make(env_id)
+    gym.register_envs(ale_py)
+    env = gym.make(env_id, render_mode="rgb_array")
     env = AtariRescale42x42(env)
     env = NormalizedEnv(env)
     return env
@@ -34,6 +36,8 @@ class AtariRescale42x42(gym.ObservationWrapper):
     def _observation(self, observation):
         return _process_frame42(observation)
 
+    def observation(self, observation):
+        return _process_frame42(observation)
 
 class NormalizedEnv(gym.ObservationWrapper):
     def __init__(self, env=None):
@@ -44,6 +48,18 @@ class NormalizedEnv(gym.ObservationWrapper):
         self.num_steps = 0
 
     def _observation(self, observation):
+        self.num_steps += 1
+        self.state_mean = self.state_mean * self.alpha + \
+            observation.mean() * (1 - self.alpha)
+        self.state_std = self.state_std * self.alpha + \
+            observation.std() * (1 - self.alpha)
+
+        unbiased_mean = self.state_mean / (1 - pow(self.alpha, self.num_steps))
+        unbiased_std = self.state_std / (1 - pow(self.alpha, self.num_steps))
+
+        return (observation - unbiased_mean) / (unbiased_std + 1e-8)
+
+    def observation(self, observation):
         self.num_steps += 1
         self.state_mean = self.state_mean * self.alpha + \
             observation.mean() * (1 - self.alpha)

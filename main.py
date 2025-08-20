@@ -36,13 +36,15 @@ parser.add_argument('--num-steps', type=int, default=20,
                     help='number of forward steps in A3C (default: 20)')
 parser.add_argument('--max-episode-length', type=int, default=1000000,
                     help='maximum length of an episode (default: 1000000)')
-parser.add_argument('--env-name', default='PongDeterministic-v4',
-                    help='environment to train on (default: PongDeterministic-v4)')
+parser.add_argument('--env-name', default='ALE/Pong-v5',
+                    help='environment to train on (default: ALE/Pong-v5)')
 parser.add_argument('--no-shared', default=False,
                     help='use an optimizer without shared momentum.')
 
 
 if __name__ == '__main__':
+    mp.set_start_method("spawn", force=True)  # Added by M-lab
+
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 

@@ -12,13 +12,13 @@ def test(rank, args, shared_model, counter):
     torch.manual_seed(args.seed + rank)
 
     env = create_atari_env(args.env_name)
-    env.seed(args.seed + rank)
+    # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
 
     model.eval()
 
-    state = env.reset()
+    state, info = env.reset(seed=args.seed + rank)
     state = torch.from_numpy(state)
     reward_sum = 0
     done = True
@@ -44,8 +44,8 @@ def test(rank, args, shared_model, counter):
         prob = F.softmax(logit, dim=-1)
         action = prob.max(1, keepdim=True)[1].numpy()
 
-        state, reward, done, _ = env.step(action[0, 0])
-        done = done or episode_length >= args.max_episode_length
+        state, reward, terminated, truncated, _ = env.step(action[0, 0])
+        done = terminated or truncated or episode_length >= args.max_episode_length
         reward_sum += reward
 
         # a quick hack to prevent the agent from stucking
@@ -62,7 +62,7 @@ def test(rank, args, shared_model, counter):
             reward_sum = 0
             episode_length = 0
             actions.clear()
-            state = env.reset()
+            state, info = env.reset(seed=args.seed+rank)
             time.sleep(60)
 
         state = torch.from_numpy(state)
