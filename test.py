@@ -6,12 +6,23 @@ import torch.nn.functional as F
 
 from envs import create_atari_env
 from model import ActorCritic
-
+from gymnasium.wrappers import RecordVideo
 
 def test(rank, args, shared_model, counter):
     torch.manual_seed(args.seed + rank)
 
     env = create_atari_env(args.env_name)
+    every = max(1, int(args.video_every))
+    if args.rec_video == True:
+        name_prefix = f"pong_a3c_gymnasium_{int(counter.value):03d}"
+        env = RecordVideo(
+            env,
+            args.video_dir,
+            # episode_trigger=lambda ep_no: True,   # 1 エピソード目だけ録画
+            episode_trigger=lambda ep: ep % (args.video_every) == 0,
+            # episode_trigger=lambda ep_no: ep_no == 0,   # 1 エピソード目だけ録画
+            name_prefix=name_prefix
+        )
     # env.seed(args.seed + rank)
 
     model = ActorCritic(env.observation_space.shape[0], env.action_space)
